@@ -1,5 +1,7 @@
 import SessionProviderWrapper from "@/components/SessionProviderWrapper";
 import { Metadata } from "next";
+import Footer from "@/components/Footer";
+
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -16,6 +18,7 @@ export default function RootLayout({
     <html lang="en">
       <body className="an">
         <SessionProviderWrapper>{children}</SessionProviderWrapper>
+        <Footer />
       </body>
     </html>
   );

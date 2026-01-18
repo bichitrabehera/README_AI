@@ -13,7 +13,7 @@ const ReadmePreview = ({ content }: Props) => {
   };
 
   return (
-    <div className="mt-8 border border-white/10 overflow-hidden">
+    <div className="mt-6 border border-white/10">
 
       {/* top bar */}
       <div className="flex items-center justify-between px-4 py-2 border-b border-white/10 bg-white/5">
@@ -27,8 +27,7 @@ const ReadmePreview = ({ content }: Props) => {
         </button>
       </div>
 
-      {/* markdown preview */}
-      <div className="prose prose-invert max-w-none p-6">
+      <div className="prose prose-invert max-h-[60vh] overflow-y-auto max-w-none p-6">
         <ReactMarkdown remarkPlugins={[remarkGfm]}>
           {content}
         </ReactMarkdown>

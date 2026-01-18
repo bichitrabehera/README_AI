@@ -8,3 +8,6 @@ body{
     font-family: "GT";
     src: url(../public/fonts/GTSectraDisplay-Regular.woff2);
 }
+::-webkit-scrollbar{
+    display: none;
+}

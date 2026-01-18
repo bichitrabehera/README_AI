@@ -1,12 +1,12 @@
 const Footer = () => {
   return (
-    <footer className="border-t border-black/10 bg-[#f8fafc] ">
+    <footer className="border-t border-white/10 bg-black ">
       <div className="max-w-6xl mx-auto px-6 py-6  flex flex-col md:flex-row items-center justify-between gap-4 text-sm">
-        <p className="text-black/60">
-          Made by <span className="text-black">Bichitra Behera</span>
+        <p className="text-white/60">
+          Made by <span className="text-white">Bichitra Behera</span>
         </p>
 
-        <div className="flex items-center gap-5 text-black/50">
+        <div className="flex items-center gap-5 text-white/50">
           <a
             href="https://x.com/bichitra_16"
             target="_blank"

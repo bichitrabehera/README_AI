@@ -18,6 +18,7 @@ export default function RepoPage() {
   const [loading, setLoading] = useState(true);
   const [readme, setReadme] = useState("");
   const [generating, setGenerating] = useState(false);
+  const [commitMessage, setCommitMessage] = useState("Updated Readme File");
 
   useEffect(() => {
     if (!session?.accessToken || !owner || !name) return;
@@ -70,33 +71,75 @@ export default function RepoPage() {
     setGenerating(false);
   };
 
+  const commitReadme = async () => {
+    await fetch("/api/commit-readme", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        owner,
+        repo: name,
+        content: readme,
+        message: commitMessage,
+      }),
+    });
+
+    alert("README committed successfully 🚀");
+  };
+
   if (loading) return <p className="p-6 text-white">Loading repo...</p>;
 
   return (
-    <div className="min-h-screen bg-black text-white p-4">
-      <div className="mx-auto max-w-6xl">
+    <div className="min-h-screen bg-black text-white p-4 overflow-hidde">
+      <div className="mx-auto">
         <DashboardHeader username={session?.user?.name} />
 
-        <div className="py-6">
-          <RepoDetails repo={repo} />
+        <div className="py-6 flex flex-col md:flex gap-10">
+          <div className="md:w-1/2">
+            <h1 className="text-xl text-center ">Repository Preview</h1>
 
-          <div className="flex justify-end py-6">
-            <button
-              onClick={generateReadme}
-              disabled={!repo || generating}
-              className="
+            <RepoDetails repo={repo} />
+
+            <div className="flex justify-end py-6">
+              <button
+                onClick={generateReadme}
+                disabled={!repo || generating}
+                className="
                 border border-white/30
                 px-6 py-2
                 text-sm
                 hover:bg-white/10
                 disabled:opacity-40
               "
-            >
-              {generating ? "Generating..." : "Generate README"}
-            </button>
+              >
+                {generating ? "Generating..." : "Generate README"}
+              </button>
+            </div>
           </div>
 
-          {readme && <ReadmePreview content={readme} />}
+          <div className="md:w-1/2 ">
+            <h1 className="text-xl text-center ">Preview and commit</h1>
+            {readme && <ReadmePreview content={readme} />}
+            {readme && (
+              <div className="mt-6 flex justify-center items-center gap-10">
+                <textarea
+                  placeholder="Commit message..."
+                  value={commitMessage}
+                  onChange={(e) => setCommitMessage(e.target.value)}
+                  className="w-full bg-zinc-900 border border-white/10 px-3 py-2 rounded-lg text-sm"
+                />
+
+                <div className="flex justify-end">
+                  <button
+                    onClick={commitReadme}
+                    disabled={!commitMessage}
+                    className="border border-white/30 px-5 py-2 text-sm hover:bg-white/10 disabled:opacity-40"
+                  >
+                    Commit
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

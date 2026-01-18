@@ -5,7 +5,7 @@ import Pattern from "./Pattern";
 
 const Hero = () => {
   return (
-    <section className="relative w-full min-h-[80vh] overflow-hidden">
+    <section className="relative w-full min-h-[90vh] overflow-hidden">
       <div className="absolute inset-0 z-0">
         <Pattern />
       </div>

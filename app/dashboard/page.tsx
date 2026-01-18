@@ -16,7 +16,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (!session?.accessToken) return;
-
+    console.log(session.accessToken);
     const fetchRepos = async () => {
       setLoading(true);
 
@@ -41,13 +41,10 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-black text-white px-6 py-3">
       <div className="max-w-6xl mx-auto">
-
         <DashboardHeader username={session?.user?.name} />
 
         <div className="py-8">
-          <h1 className="text-2xl font-semibold">
-            Your GitHub Repositories
-          </h1>
+          <h1 className="text-2xl font-semibold">Your GitHub Repositories</h1>
           <p className="text-white/50 text-sm">
             Select a repository to generate README
           </p>
