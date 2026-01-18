@@ -34,13 +34,16 @@ const Hero = () => {
             href="/login"
             className="px-6 py-3 font-medium bg-black text-white border border-black hover:bg-black/90 transition"
           >
-            Get Started
+            <button className="button">
+              Get started
+              <span className="button-span"> ─ it's free</span>
+            </button>
           </Link>
 
           <a
             href="https://github.com"
             target="_blank"
-            className="px-6 py-3 border border-black/20 text-black hover:bg-black hover:text-white transition"
+            className="px-6 py-3 border border-black/20 text-black bg-white hover:bg-black hover:text-white transition"
           >
             View on GitHub
           </a>

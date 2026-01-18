@@ -1,5 +1,11 @@
 import SessionProviderWrapper from "@/components/SessionProviderWrapper";
-import './globals.css';
+import { Metadata } from "next";
+import "./globals.css";
+
+export const metadata: Metadata = {
+  title: "ReadmeAI - AI-powered GitHub README Generator",
+  description: "Generate README files for your GitHub repositories using AI.",
+};
 
 export default function RootLayout({
   children,
@@ -8,10 +14,8 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
-        <SessionProviderWrapper>
-          {children}
-        </SessionProviderWrapper>
+      <body className="an">
+        <SessionProviderWrapper>{children}</SessionProviderWrapper>
       </body>
     </html>
   );
