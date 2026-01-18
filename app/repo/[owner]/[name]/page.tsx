@@ -18,7 +18,7 @@ export default function RepoPage() {
   const [loading, setLoading] = useState(true);
   const [readme, setReadme] = useState("");
   const [generating, setGenerating] = useState(false);
-  const [commitMessage, setCommitMessage] = useState("Updated Readme File");
+  // const [commitMessage, setCommitMessage] = useState("Updated Readme File");
 
   useEffect(() => {
     if (!session?.accessToken || !owner || !name) return;
@@ -71,29 +71,29 @@ export default function RepoPage() {
     setGenerating(false);
   };
 
-  const commitReadme = async () => {
-    await fetch("/api/commit-readme", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        owner,
-        repo: name,
-        content: readme,
-        message: commitMessage,
-      }),
-    });
+  // const commitReadme = async () => {
+  //   await fetch("/api/commit-readme", {
+  //     method: "POST",
+  //     headers: { "Content-Type": "application/json" },
+  //     body: JSON.stringify({
+  //       owner,
+  //       repo: name,
+  //       content: readme,
+  //       message: commitMessage,
+  //     }),
+  //   });
 
-    alert("README committed successfully 🚀");
-  };
+  //   alert("README committed successfully 🚀");
+  // };
 
   if (loading) return <p className="p-6 text-white">Loading repo...</p>;
 
   return (
-    <div className="min-h-screen bg-black text-white p-4 overflow-hidde">
+    <div className="min-h-screen bg-black text-white p-4 overflow-hidden">
       <div className="mx-auto">
         <DashboardHeader username={session?.user?.name} />
 
-        <div className="py-6 flex flex-col md:flex gap-10">
+        <div className="py-6 flex flex-col md:flex-row gap-10">
           <div className="md:w-1/2">
             <h1 className="text-xl text-center ">Repository Preview</h1>
 
@@ -119,7 +119,7 @@ export default function RepoPage() {
           <div className="md:w-1/2 ">
             <h1 className="text-xl text-center ">Preview and commit</h1>
             {readme && <ReadmePreview content={readme} />}
-            {readme && (
+            {/* {readme && (
               <div className="mt-6 flex justify-center items-center gap-10">
                 <textarea
                   placeholder="Commit message..."
@@ -138,7 +138,7 @@ export default function RepoPage() {
                   </button>
                 </div>
               </div>
-            )}
+            )} */}
           </div>
         </div>
       </div>

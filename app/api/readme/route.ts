@@ -2,7 +2,7 @@ import { Agent, run } from "@openai/agents";
 import { NextResponse } from "next/server";
 
 const readmeAgent = new Agent({
-  name: "Portfolio README Agent",
+  name: "README Agent",
   instructions: `
 You are helping a developer write a portfolio-quality README.
 

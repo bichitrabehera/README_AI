@@ -13,8 +13,8 @@ const DashboardHeader = ({ username }: Props) => {
       {/* Left */}
       <div className="leading-tight">
         <h1 className="text-white font-[GT] font-semibold text-lg tracking-wide">
-          <Link href="/">README.AI</Link>
-        </h1>
+          <Link href="/dashboard">README.AI </Link>
+        </h1> 
       </div>
 
       {/* Right */}

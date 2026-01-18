@@ -1,18 +1,19 @@
-import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
-export async function PUT(req: Request) {
+export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
 
-  if (!session.accessToken) {
-    return NextResponse.json({ message: "not authorized" }, { status: 401 });
+  if (!session?.accessToken) {
+    return NextResponse.json({ error: "No access token" }, { status: 401 });
   }
 
   const { owner, repo, content, message } = await req.json();
 
   const token = session.accessToken;
 
-  const readme = await fetch(
+  const readmeRes = await fetch(
     `https://api.github.com/repos/${owner}/${repo}/contents/README.md`,
     {
       headers: {
@@ -24,12 +25,12 @@ export async function PUT(req: Request) {
 
   let sha = undefined;
 
-  if (readme.ok) {
-    const data = await readme.json();
+  if (readmeRes.ok) {
+    const data = await readmeRes.json();
     sha = data.sha;
   }
 
-  const commitReadme = await fetch(
+  const commitRes = await fetch(
     `https://api.github.com/repos/${owner}/${repo}/contents/README.md`,
     {
       method: "PUT",
@@ -44,10 +45,18 @@ export async function PUT(req: Request) {
       }),
     },
   );
-  if (!commitReadme.ok) {
-    const err = await commitReadme.text();
-    return NextResponse.json({ error: err }, { status: 500 });
+
+  const result = await commitRes.json();
+
+  console.log("TOKEN:", token?.slice(0, 10));
+  console.log("OWNER:", owner);
+  console.log("REPO:", repo);
+  console.log("MESSAGE:", message);
+  console.log("CONTENT LENGTH:", content.length);
+
+  if (!commitRes.ok) {
+    return NextResponse.json({ error: result }, { status: 500 });
   }
 
-  return NextResponse.json({ success: true });
+  return NextResponse.json({ success: true, result });
 }
