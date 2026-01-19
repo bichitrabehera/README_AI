@@ -1,5 +1,5 @@
 "use client";
-import { signIn, signOut, useSession } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
@@ -24,7 +24,6 @@ export default function Page() {
 
   return (
     <div className="min-h-screen flex items-center bg-black justify-center px-4">
-      
       <div className="relative w-full max-w-md">
         <div className="relative bg-black backdrop-blur-xl border border-white/10 p-8 shadow-2xl">
           <div className="text-center space-y-5">
@@ -38,7 +37,7 @@ export default function Page() {
 
             <button
               onClick={() => signIn("github")}
-              className="w-full flex items-center justify-center gap-3 hover:bg-gray-200 bg-white py-3 text-black font-medium hover:bg-white/90 transition"
+              className="w-full flex items-center justify-center gap-3 bg-white py-3 text-black font-medium hover:bg-white/90 transition"
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                 <path

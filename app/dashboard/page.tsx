@@ -11,7 +11,7 @@ export default function Dashboard() {
   const router = useRouter();
   const { data: session, status } = useSession();
 
-  const [repos, setRepos] = useState<any[]>([]);
+  const [repos, setRepos] = useState([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -39,27 +39,27 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white px-6 py-3">
+    <div className="min-h-screen bg-black text-white">
+      <DashboardHeader username={session?.user?.name} />
+
       <div className="max-w-6xl mx-auto">
-        <DashboardHeader username={session?.user?.name} />
+        <div className="py-8 px-4 ">
+        <h1 className="text-2xl font-semibold ">Your GitHub Repositories</h1>
+        <p className="text-white/50 text-sm">
+          Select a repository to generate README
+        </p>
+      </div>
 
-        <div className="py-8">
-          <h1 className="text-2xl font-semibold">Your GitHub Repositories</h1>
-          <p className="text-white/50 text-sm">
-            Select a repository to generate README
-          </p>
-        </div>
-
-        {loading ? (
-          <p>Fetching repositories...</p>
-        ) : (
-          <RepoGrid
-            repos={repos}
-            onSelect={(repo) =>
-              router.push(`/repo/${repo.owner.login}/${repo.name}`)
-            }
-          />
-        )}
+      {loading ? (
+        <p>Fetching repositories...</p>
+      ) : (
+        <RepoGrid
+          repos={repos}
+          onSelect={(repo) =>
+            router.push(`/repo/${repo.owner.login}/${repo.name}`)
+          }
+        />
+      )}
       </div>
     </div>
   );

@@ -1,8 +1,7 @@
+import "./global.css";
 import SessionProviderWrapper from "@/components/SessionProviderWrapper";
 import { Metadata } from "next";
 import Footer from "@/components/Footer";
-
-import "./globals.css";
 
 export const metadata: Metadata = {
   title: "ReadmeAI - AI-powered GitHub README Generator",

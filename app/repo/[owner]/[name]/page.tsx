@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import RepoDetails from "@/components/dashboard/RepoDetails";
 import ReadmePreview from "@/components/dashboard/ReadmePreview";
+import { GitHubRepo } from "@/types/github";
 
 export default function RepoPage() {
   const params = useParams();
@@ -14,7 +15,7 @@ export default function RepoPage() {
 
   const { data: session } = useSession();
 
-  const [repo, setRepo] = useState<any>(null);
+  const [repo, setRepo] = useState<GitHubRepo | null>();
   const [loading, setLoading] = useState(true);
   const [readme, setReadme] = useState("");
   const [generating, setGenerating] = useState(false);
@@ -89,57 +90,64 @@ export default function RepoPage() {
   if (loading) return <p className="p-6 text-white">Loading repo...</p>;
 
   return (
-    <div className="min-h-screen bg-black text-white p-4 overflow-hidden">
-      <div className="mx-auto">
-        <DashboardHeader username={session?.user?.name} />
+    <div className="min-h-screen bg-black text-white overflow-hidden">
+      <DashboardHeader username={session?.user?.name} />
 
-        <div className="py-6 flex flex-col md:flex-row gap-10">
-          <div className="md:w-1/2">
-            <h1 className="text-xl text-center ">Repository Preview</h1>
+      <div className="mx-auto max-w-6xl px-4 py-8">
+        <div className="grid grid-cols-1 gap-10">
+          <section
+            className="
+            bg-black/40
+            backdrop-blur-xl
+          "
+          >
+            <h2 className="text-sm uppercase tracking-wider text-white/50 mb-4">
+              Repository Preview
+            </h2>
 
-            <RepoDetails repo={repo} />
+            {repo && <RepoDetails repo={repo} />}
 
-            <div className="flex justify-end py-6">
+            <div className="flex justify-end pt-6">
               <button
                 onClick={generateReadme}
                 disabled={!repo || generating}
                 className="
-                border border-white/30
                 px-6 py-2
                 text-sm
+                border border-white/30
                 hover:bg-white/10
                 disabled:opacity-40
+                transition
               "
               >
                 {generating ? "Generating..." : "Generate README"}
               </button>
             </div>
-          </div>
+          </section>
 
-          <div className="md:w-1/2 ">
-            <h1 className="text-xl text-center ">Preview and commit</h1>
-            {readme && <ReadmePreview content={readme} />}
-            {/* {readme && (
-              <div className="mt-6 flex justify-center items-center gap-10">
-                <textarea
-                  placeholder="Commit message..."
-                  value={commitMessage}
-                  onChange={(e) => setCommitMessage(e.target.value)}
-                  className="w-full bg-zinc-900 border border-white/10 px-3 py-2 rounded-lg text-sm"
-                />
+          <section
+            className="
+      
+          
+            bg-black/40
+            backdrop-blur-xl
+        
+          "
+          >
+            <h2 className="text-sm uppercase tracking-wider text-white/50 mb-4">
+              Preview & Commit
+            </h2>
 
-                <div className="flex justify-end">
-                  <button
-                    onClick={commitReadme}
-                    disabled={!commitMessage}
-                    className="border border-white/30 px-5 py-2 text-sm hover:bg-white/10 disabled:opacity-40"
-                  >
-                    Commit
-                  </button>
-                </div>
+            {readme ? (
+              <ReadmePreview content={readme} />
+            ) : (
+              <div className="flex items-center justify-center h-75 text-white/30 text-sm border border-dashed border-white/10">
+                Generate a README to preview it here
               </div>
-            )} */}
-          </div>
+            )}
+
+            {/* commit UI stays here later */}
+          </section>
         </div>
       </div>
     </div>

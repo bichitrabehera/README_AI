@@ -5,7 +5,7 @@ import Pattern from "./Pattern";
 
 const Hero = () => {
   return (
-    <section className="relative w-full min-h-[90vh] overflow-hidden">
+    <section className="relative w-full min-h-[90vh] flex justify-center items-center overflow-hidden">
       <div className="absolute inset-0 z-0">
         <Pattern />
       </div>
@@ -17,7 +17,7 @@ const Hero = () => {
 
         <h1 className="text-4xl md:text-6xl font-bold tracking-tight leading-tight text-black">
           Generate beautiful <br />
-          <span className="bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent">
+          <span className="bg-linear-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent">
             GitHub README files
           </span>{" "}
           using AI
@@ -36,7 +36,7 @@ const Hero = () => {
           >
             <button className="button">
               Get started
-              <span className="button-span"> ─ it's free</span>
+              <span className="button-span"> ─ its free</span>
             </button>
           </Link>
 

@@ -1,53 +1,9 @@
-import { Agent, run } from "@openai/agents";
+import OpenAI from "openai";
 import { NextResponse } from "next/server";
 
-const readmeAgent = new Agent({
-  name: "README Agent",
-  instructions: `
-You are helping a developer write a portfolio-quality README.
-
-Your goal is to explain the project clearly, honestly, and professionally,
-as if the developer is presenting this project to a recruiter.
-
-Use simple language.
-Avoid marketing hype.
-Do not assume features that are not visible in the repository data.
-
-If something is not clearly found in the code or files, say "Not specified".
-
-Structure the README exactly as follows:
-
-## Description
-Explain what the project is about in 2–4 sentences so someone understands it immediately.
-
-## Purpose
-Explain why this project was built and what motivated its creation.
-
-## Problem Solved
-Explain what problem the project addresses or what need it fulfills.
-
-## Tech Stack
-List programming languages, frameworks, libraries, and APIs actually used.
-
-## Design
-Describe the user interface or interaction.
-If screenshots or demo are missing, mention that placeholders can be added.
-
-## Features
-List concrete features that can be identified from the code or README.
-
-## What I Learned
-Explain what skills or concepts the developer likely learned while building this project.
-
-## What Makes This Project Stand Out
-Explain what differentiates this project from similar ones.
-
-## How to Run the Project
-Provide setup and usage instructions based strictly on available files.
-If unclear, explain what is missing.
-
-Return valid Markdown only.
-`,
+const openai = new OpenAI({
+  apiKey: "local",
+  baseURL: "http://localhost:12434/v1",
 });
 
 export async function POST(req: Request) {
@@ -60,26 +16,8 @@ export async function POST(req: Request) {
   const owner = repo.owner?.login;
   const repoName = repo.name;
 
-  // -------- Fetch README --------
-  let readmeText = "README not found.";
-
-  try {
-    const readmeRes = await fetch(
-      `https://api.github.com/repos/${owner}/${repoName}/readme`,
-      {
-        headers: {
-          Accept: "application/vnd.github.raw",
-        },
-      },
-    );
-
-    if (readmeRes.ok) {
-      readmeText = await readmeRes.text();
-    }
-  } catch {}
-
-  // -------- Fetch repo tree --------
-  let fileTree = [];
+  // ---------------- FILE TREE ----------------
+  let fileTree: string[] = [];
 
   try {
     const treeRes = await fetch(
@@ -88,12 +26,21 @@ export async function POST(req: Request) {
 
     if (treeRes.ok) {
       const treeData = await treeRes.json();
-      fileTree = treeData.tree?.map((f: any) => f.path) || [];
+      fileTree = treeData.tree?.map((f: { path: string }) => f.path) || [];
     }
   } catch {}
 
-  // -------- Fetch package.json --------
-  let packageJson = "package.json not found.";
+  const importantFiles = fileTree
+    .filter(
+      (f) =>
+        f.endsWith("package.json") ||
+        f.endsWith("index.js") ||
+        f.includes("src"),
+    )
+    .slice(0, 20);
+
+  // ---------------- package.json ----------------
+  let packageJson = "Not specified.";
 
   try {
     const pkgRes = await fetch(
@@ -110,30 +57,45 @@ export async function POST(req: Request) {
     }
   } catch {}
 
-  // -------- Input to agent --------
-  const input = `
-Repository: ${repo.full_name}
-Description: ${repo.description}
+  // ---------------- PROMPT ----------------
+  const prompt = `
+    Generate a README.md in Markdown.
 
-===== README CONTENT =====
-${readmeText}
+    Write new content only.
+    Do not repeat the input.
+    Do not ask questions.
 
-===== FILE STRUCTURE =====
-${fileTree.join("\n")}
+    If information is missing, write "Not specified".
 
-===== package.json =====
-${packageJson}
-`;
+    Use this structure exactly:
 
-  const result = await run(readmeAgent, input, {
-    stream: true,
+    ## Description
+    ## Purpose
+    ## Problem Solved
+    ## Tech Stack
+    ## Design
+    ## Features
+    ## What I Learned
+    ## How to Run the Project
+
+    Repository: ${repo.full_name}
+    Description: ${repo.description}
+
+    Important files:
+    ${importantFiles.join("\n")}
+
+    package.json:
+    ${packageJson}
+    `;
+
+  // ---------------- AI ----------------
+  const completion = await openai.chat.completions.create({
+    model: "ai/smollm2:latest",
+    temperature: 0.2,
+    messages: [{ role: "user", content: prompt }],
   });
 
-  const stream = result.toTextStream();
-
-  return new Response(stream, {
-    headers: {
-      "Content-Type": "text/plain; charset=utf-8",
-    },
+  return NextResponse.json({
+    readme: completion.choices[0].message.content,
   });
 }
