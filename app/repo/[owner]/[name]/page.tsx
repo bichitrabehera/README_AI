@@ -19,6 +19,7 @@ export default function RepoPage() {
   const [loading, setLoading] = useState(true);
   const [readme, setReadme] = useState("");
   const [generating, setGenerating] = useState(false);
+  const [description, setDescription] = useState("");
   // const [commitMessage, setCommitMessage] = useState("Updated Readme File");
 
   useEffect(() => {
@@ -48,27 +49,17 @@ export default function RepoPage() {
     const res = await fetch("/api/readme", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ repo }),
+      body: JSON.stringify({ repo, description }),
     });
 
-    if (!res.ok || !res.body) {
+    if (!res.ok) {
       setGenerating(false);
       return;
     }
 
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-
-    let text = "";
-
-    while (true) {
-      const { value, done } = await reader.read();
-      if (done) break;
-
-      text += decoder.decode(value);
-      setReadme(text);
-    }
-
+    const data = await res.json();
+    setReadme(data.readme);
+    
     setGenerating(false);
   };
 
@@ -106,6 +97,18 @@ export default function RepoPage() {
             </h2>
 
             {repo && <RepoDetails repo={repo} />}
+
+            <div className="mt-6">
+              <label className="block text-sm text-white/60 mb-2">
+                Project Description (Optional)
+              </label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Briefly describe what your project does (e.g. 'A kanban board for managing tasks with drag-and-drop'). This helps the AI generate a better introduction."
+                className="w-full bg-black/20 border border-white/10 rounded p-3 text-white text-sm focus:border-white/30 outline-none min-h-[100px]"
+              />
+            </div>
 
             <div className="flex justify-end pt-6">
               <button

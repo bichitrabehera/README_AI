@@ -36,7 +36,6 @@ const Hero = () => {
           >
             <button className="button">
               Get started
-              <span className="button-span"> ─ its free</span>
             </button>
           </Link>
 

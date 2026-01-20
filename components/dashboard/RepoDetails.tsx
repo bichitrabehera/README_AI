@@ -10,7 +10,6 @@ const RepoDetails = ({ repo }: Props) => {
   return (
     <div className="rounded-xl border border-white/10 bg-black/40 backdrop-blur-xl p-5">
       
-      {/* Header */}
       <div className="flex items-start gap-4">
         <Image
           src={repo.owner.avatar_url}
@@ -36,12 +35,11 @@ const RepoDetails = ({ repo }: Props) => {
             target="_blank"
             className="inline-block mt-2 text-xs text-blue-400 hover:underline"
           >
-            View on GitHub →
+            View on GitHub
           </a>
         </div>
       </div>
 
-      {/* Meta */}
       <div className="flex flex-wrap gap-4 mt-5 text-xs text-white/60">
         {repo.language && (
           <span className="px-2 py-1 rounded bg-white/5 border border-white/10">
@@ -65,7 +63,6 @@ const RepoDetails = ({ repo }: Props) => {
         </span>
       </div>
 
-      {/* Topics */}
       {repo.topics?.length > 0 && (
         <div className="mt-4 flex flex-wrap gap-2">
           {repo.topics.slice(0, 6).map((topic) => (

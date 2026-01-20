@@ -9,8 +9,8 @@ interface RepoGridProps {
 const RepoGrid = ({ repos, onSelect }: RepoGridProps) => {
   return (
     <div className="flex flex-wrap px-4 gap-4">
-      {repos.map((repo) => (
-        <RepoCard key={repo.id} repo={repo} onClick={() => onSelect(repo)} />
+      {repos.map((repo, index) => (
+        <RepoCard key={index} repo={repo} onClick={() => onSelect(repo)} />
       ))}
     </div>
   );

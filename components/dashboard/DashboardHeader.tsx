@@ -9,7 +9,7 @@ interface Props {
 
 const DashboardHeader = ({ username }: Props) => {
   return (
-    <header className="sticky top-0 z-40 border-b border-white/10 bg-black/60 backdrop-blur-xl">
+    <header className=" top-0 z-40 border-b border-white/10 bg-black/60 backdrop-blur-xl">
       <div className="max-w-6xl mx-auto flex items-center justify-between px-4 py-3">
         
         <Link href="/dashboard" className="flex flex-col leading-tight">

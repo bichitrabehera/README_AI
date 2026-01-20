@@ -11,7 +11,7 @@ const RepoCard = ({ repo, onClick }: RepoCardProps) => {
       onClick={onClick}
       className="px-3 py-1 md:py-3 rounded text-sm border flex border-white/20 shadow gap-4 cursor-pointer hover:bg-white/5 transition"
     >
-      <h2 className="font">{repo.name}</h2>
+      <h2 className="font" key={repo.id}>{repo.name}</h2>
     </div>
   );
 };

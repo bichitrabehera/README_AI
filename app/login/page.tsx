@@ -7,7 +7,6 @@ export default function Page() {
   const { data: session, status } = useSession();
   const router = useRouter();
 
-  // redirect after login
   useEffect(() => {
     if (session) {
       router.push("/dashboard");
