@@ -283,7 +283,7 @@ export async function POST(req: Request) {
       messages: [{ role: "user", content: prompt }],
     });
 
-    recordUsage(userId);
+    await recordUsage(userId);
 
     return NextResponse.json({
       mode: existingReadme ? "enhanced" : "generated",
