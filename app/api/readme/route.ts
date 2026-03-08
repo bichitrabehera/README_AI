@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import { NextResponse } from "next/server";
 import { Octokit } from "@octokit/rest";
+import { checkRateLimit, recordUsage } from "@/middlewares/rateLimit";
 
 const openai = new OpenAI({
   // baseURL: "http://localhost:12434/v1",
@@ -130,6 +131,11 @@ function generateFileTree(paths: string[]): string {
 
 export async function POST(req: Request) {
   try {
+    const rateLimitResult = await checkRateLimit();
+    if (rateLimitResult instanceof NextResponse) return rateLimitResult;
+
+    const userId = rateLimitResult;
+
     const { repo, description } = await req.json();
 
     if (!repo?.owner?.login || !repo?.name) {
@@ -276,6 +282,8 @@ export async function POST(req: Request) {
       temperature: 0.3,
       messages: [{ role: "user", content: prompt }],
     });
+
+    recordUsage(userId);
 
     return NextResponse.json({
       mode: existingReadme ? "enhanced" : "generated",

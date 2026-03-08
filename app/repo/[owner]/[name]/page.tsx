@@ -20,6 +20,7 @@ export default function RepoPage() {
   // const [readme, setReadme] = useState("");
   const [generating, setGenerating] = useState(false);
   const [description, setDescription] = useState("");
+  const [error, setError] = useState("");
   // const [commitMessage, setCommitMessage] = useState("Updated Readme File");
 
   const cacheKey = `readme_cache_${owner}_${name}`;
@@ -64,6 +65,7 @@ export default function RepoPage() {
 
     setGenerating(true);
     setReadme("");
+    setError("");
 
     const res = await fetch("/api/readme", {
       method: "POST",
@@ -71,14 +73,15 @@ export default function RepoPage() {
       body: JSON.stringify({ repo, description }),
     });
 
+    const data = await res.json();
+
     if (!res.ok) {
+      setError(data.error || "Something went wrong");
       setGenerating(false);
       return;
     }
 
-    const data = await res.json();
     updateReadme(data.readme);
-
     setGenerating(false);
   };
 
@@ -129,7 +132,17 @@ export default function RepoPage() {
               />
             </div>
 
-            <div className="flex justify-end pt-6">
+            {error && (
+              <p className="mt-4 text-xs text-red-400 bg-red-400/10 border border-red-400/20 rounded px-3 py-2">
+                {error}
+              </p>
+            )}
+
+            <p className="mt-4 text text-white/90">
+              Note: You can generate one README per day.
+            </p>
+
+            <div className="flex justify-end pt-4">
               <button
                 onClick={generateReadme}
                 disabled={!repo || generating}
@@ -142,7 +155,7 @@ export default function RepoPage() {
                 transition
               "
               >
-                {generating ? "Generating..." : "Generate README"}
+                {generating ? "Generating..." : "Generate"}
               </button>
             </div>
           </section>

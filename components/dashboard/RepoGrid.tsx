@@ -32,11 +32,11 @@ const RepoGrid = ({ repos, onSelect }: RepoGridProps) => {
       </div>
 
       {/* Pagination */}
-      <div className="flex justify-center items-center gap-4 mt-6">
+      <div className="flex justify-center items-center gap-4 mt-12">
         <button
           disabled={page === 1}
           onClick={() => setPage((p) => p - 1)}
-          className="px-3 py-1 border rounded disabled:opacity-50"
+          className="px-3 py-1 border border-white/30 rounded disabled:opacity-50"
         >
           Prev
         </button>
@@ -48,7 +48,7 @@ const RepoGrid = ({ repos, onSelect }: RepoGridProps) => {
         <button
           disabled={page === totalPages}
           onClick={() => setPage((p) => p + 1)}
-          className="px-3 py-1 border rounded disabled:opacity-50"
+          className="px-3 py-1 border border-white/30 rounded disabled:opacity-50"
         >
           Next
         </button>

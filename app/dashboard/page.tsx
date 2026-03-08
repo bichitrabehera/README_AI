@@ -56,6 +56,9 @@ export default function Dashboard() {
             {filteredRepos.length} repositories · Select one to generate a
             README
           </p>
+          <p className="mt-4 text text-white/90 bg-red-500/20 inline-block px-3 py-1 rounded">
+            Note: You can generate one README per day.
+          </p>
         </div>
 
         <div className="px-4 pb-6">
