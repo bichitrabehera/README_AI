@@ -8,7 +8,7 @@ interface Props {
 
 const RepoDetails = ({ repo }: Props) => {
   return (
-    <div className="rounded border border-white/10 bg-black/40 backdrop-blur-xl p-5">
+    <div className="rounded border border-white/10 bg-white/2 backdrop-blur-xl p-5">
       <div className="flex items-start gap-4">
         <Image
           src={repo.owner.avatar_url}

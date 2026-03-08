@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import RepoGrid from "@/components/dashboard/RepoGrid";
 import { GitHubRepo } from "@/types/github";
+import { SearchIcon } from "lucide-react";
 
 export default function Dashboard() {
   const router = useRouter();
@@ -48,27 +49,27 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-black text-white">
       <DashboardHeader username={session?.user?.name} />
+      <div className="py-6 px-4 max-w-6xl mx-auto">
+        <div className="flex items-center gap-3 rounded border border-white/10 bg-white/5 px-4 py-2 transition focus-within:border-white/30">
+          <SearchIcon size={16} className="text-white/40 shrink-0" />
 
-      <div className="max-w-6xl mx-auto">
-        <div className="py-8 px-4">
-          <h1 className="text-2xl font-semibold">Your GitHub Repositories</h1>
-          <p className="text-white/50 text-sm">
-            {filteredRepos.length} repositories · Select one to generate a
-            README
-          </p>
-          <p className="mt-4 text text-white/90 bg-red-500/20 inline-block px-3 py-1 rounded">
-            Note: You can generate one README per day.
-          </p>
-        </div>
-
-        <div className="px-4 pb-6">
           <input
             type="text"
             placeholder="Search repositories..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded border border-white/10 bg-white/5 px-4 py-2 text-sm outline-none focus:border-white/30"
+            className="w-full bg-transparent text-sm text-white placeholder:text-white/40 outline-none"
           />
+        </div>
+      </div>
+
+      <div className="max-w-6xl mx-auto">
+        <div className="pb-4 px-4">
+          <h1 className="text-xl font-semibold">Projects</h1>
+
+          <p className="mt-4 text-sm text-white/90 bg-red-500/20 inline-block px-3 py-1 rounded-lg">
+            You can generate one README per day.
+          </p>
         </div>
 
         {loading ? (

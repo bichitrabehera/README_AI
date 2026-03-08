@@ -20,7 +20,7 @@ export default function ReadmePreview({ content }: Props) {
   };
 
   return (
-    <div className="mt-6 rounded border border-white/10 bg-black/40 overflow-hidden">
+    <div className="mt-6 rounded border border-white/10 bg-white/2 overflow-hidden">
       <div className="flex items-center justify-between border-b border-white/10 px-4 py-2 bg-black/70">
         <span className="text-xs uppercase tracking-wider text-white/40">
           README.md Preview

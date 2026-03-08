@@ -21,7 +21,7 @@ const RepoGrid = ({ repos, onSelect }: RepoGridProps) => {
 
   return (
     <div className="px-4 pb-20">
-      <div className=" grid grid-cols-1 md:grid-cols-4  gap-4">
+      <div className=" grid grid-cols-1 md:grid-cols-3  gap-4">
         {currentRepos.map((repo, index) => (
           <RepoCard
             key={repo.id ?? index}

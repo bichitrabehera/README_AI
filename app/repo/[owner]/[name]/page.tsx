@@ -120,7 +120,7 @@ export default function RepoPage() {
 
             {repo && <RepoDetails repo={repo} />}
 
-            <div className="mt-6">
+            <div className="mt-6 bg-white/2">
               <label className="block text-sm text-white/60 mb-2">
                 Project Description (Optional)
               </label>
