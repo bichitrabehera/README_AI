@@ -38,7 +38,7 @@ const RepoGrid = ({ repos, onSelect }: RepoGridProps) => {
           onClick={() => setPage((p) => p - 1)}
           className="px-3 py-1 border border-white/30 rounded disabled:opacity-50"
         >
-          Prev
+          {"<"}
         </button>
 
         <span>
@@ -50,7 +50,7 @@ const RepoGrid = ({ repos, onSelect }: RepoGridProps) => {
           onClick={() => setPage((p) => p + 1)}
           className="px-3 py-1 border border-white/30 rounded disabled:opacity-50"
         >
-          Next
+          {">"}
         </button>
       </div>
     </div>

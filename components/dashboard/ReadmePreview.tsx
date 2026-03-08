@@ -5,6 +5,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 import "highlight.js/styles/github-dark.css";
+import { FileText } from "lucide-react";
 
 interface Props {
   content: string;
@@ -23,7 +24,8 @@ export default function ReadmePreview({ content }: Props) {
     <div className="mt-6 rounded border border-white/10 bg-white/2 overflow-hidden">
       <div className="flex items-center justify-between border-b border-white/10 px-4 py-2 bg-black/70">
         <span className="text-xs uppercase tracking-wider text-white/40">
-          README.md Preview
+          <FileText className="inline-block w-4 h-4 mr-1" />
+          README
         </span>
 
         <button

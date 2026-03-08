@@ -2,6 +2,8 @@ import OpenAI from "openai";
 import { NextResponse } from "next/server";
 import { Octokit } from "@octokit/rest";
 import { checkRateLimit, recordUsage } from "@/middlewares/rateLimit";
+import { analyzeRepository } from "@/libs/analyzeRepository";
+import { generateFileTree } from "@/libs/generateFileTree";
 
 const openai = new OpenAI({
   // baseURL: "http://localhost:12434/v1",
@@ -10,124 +12,6 @@ const openai = new OpenAI({
 const octokit = new Octokit({
   auth: process.env.GITHUB_TOKEN,
 });
-
-type TreeNode = { [key: string]: TreeNode };
-
-interface RepoSummary {
-  language: string;
-  framework: string;
-  projectType: string;
-  packageManager: string;
-}
-
-function analyzeRepository(filePaths: string[]): RepoSummary {
-  const files = filePaths.map((f) => f.toLowerCase());
-
-  // --- Language ---
-  const language = files.some((f) => f.endsWith(".ts") || f.endsWith(".tsx"))
-    ? "TypeScript"
-    : files.some((f) => f.endsWith(".js") || f.endsWith(".jsx"))
-      ? "JavaScript"
-      : files.some((f) => f.endsWith(".py"))
-        ? "Python"
-        : files.some((f) => f.endsWith(".go"))
-          ? "Go"
-          : files.some((f) => f.endsWith(".rs"))
-            ? "Rust"
-            : files.some((f) => f.endsWith(".java"))
-              ? "Java"
-              : "Unknown";
-
-  // --- Framework ---
-  const framework = files.some((f) => f.includes("next.config"))
-    ? "Next.js"
-    : files.some((f) => f.includes("vite.config"))
-      ? "Vite + React"
-      : files.some((f) => f.includes("nuxt.config"))
-        ? "Nuxt.js"
-        : files.some((f) => f.includes("svelte.config"))
-          ? "SvelteKit"
-          : files.some((f) => f.includes("angular.json"))
-            ? "Angular"
-            : files.some((f) => f.includes("manage.py"))
-              ? "Django"
-              : files.some(
-                    (f) =>
-                      f.includes("requirements.txt") || f.includes("app.py"),
-                  )
-                ? "Flask / FastAPI"
-                : files.some((f) => f.endsWith("go.mod"))
-                  ? "Go Modules"
-                  : files.some((f) => f.includes("cargo.toml"))
-                    ? "Cargo (Rust)"
-                    : files.some((f) => f.includes("pom.xml"))
-                      ? "Maven (Java)"
-                      : files.some((f) => f.includes("build.gradle"))
-                        ? "Gradle (Java)"
-                        : "Unknown";
-
-  // --- Project Type ---
-  const projectType = files.some(
-    (f) => f.includes("app/") || f.includes("pages/"),
-  )
-    ? "Web Application"
-    : files.some(
-          (f) =>
-            f.includes("api/") ||
-            f.includes("routes/") ||
-            f.includes("controllers/"),
-        )
-      ? "REST API / Backend"
-      : files.some((f) => f.includes("cli") || f.includes("cmd/"))
-        ? "CLI Tool"
-        : files.some(
-              (f) =>
-                f.includes("lib/") ||
-                f.includes("index.ts") ||
-                f.includes("index.js"),
-            )
-          ? "Library / Package"
-          : "General Project";
-
-  // --- Package Manager ---
-  const packageManager = files.includes("bun.lockb")
-    ? "bun"
-    : files.includes("pnpm-lock.yaml")
-      ? "pnpm"
-      : files.includes("yarn.lock")
-        ? "yarn"
-        : "npm";
-
-  return { language, framework, projectType, packageManager };
-}
-
-function generateFileTree(paths: string[]): string {
-  const tree: TreeNode = {};
-
-  paths.forEach((path) => {
-    const parts = path.split("/");
-    let current: TreeNode = tree;
-    parts.forEach((part) => {
-      if (!current[part]) current[part] = {};
-      current = current[part];
-    });
-  });
-
-  function buildString(node: TreeNode, prefix = ""): string {
-    const keys = Object.keys(node).sort();
-    let result = "";
-    keys.forEach((key, index) => {
-      const isLast = index === keys.length - 1;
-      const connector = isLast ? "└── " : "├── ";
-      const childPrefix = isLast ? "    " : "│   ";
-      result += `${prefix}${connector}${key}\n`;
-      result += buildString(node[key], prefix + childPrefix);
-    });
-    return result;
-  }
-
-  return buildString(tree);
-}
 
 export async function POST(req: Request) {
   try {
@@ -219,60 +103,134 @@ export async function POST(req: Request) {
     // 4. Build prompt
     // ------------------------------------------------
     const prompt = `
-      You are an elite Senior Software Engineer and Technical Writer.
-      Your task is to generate a **Resume-Level** README.md for this GitHub repository. 
-      This README should be suitable for a portfolio, impressing recruiters and hiring managers.
+  You are an expert Technical Writer and Senior Software Engineer specializing in open-source documentation.
+  Your task is to generate a professional, developer-friendly README.md for a GitHub repository.
 
-      **Goal:** Position this project as a high-quality, professional software engineering artifact.
+  **Repository Context:**
+  - Owner: ${owner}
+  - Repository Name: ${repoName}
+  - Primary Language: ${summary.language}
+  - Framework/Library: ${summary.framework}
+  - Project Type: ${summary.projectType}
+  - Package Manager: ${summary.packageManager}
 
-      **Repository Context:**
-      - Owner: ${owner}
-      - Name: ${repoName}
-      - Detected Language: ${summary.language}
-      - Detected Framework: ${summary.framework}
-      - Project Type: ${summary.projectType}
-      - Package Manager: ${summary.packageManager}
-      
-      **Source Material:**
-      - User Provided Description (High Priority): ${description || "None provided"}
-      - Existing README (reference): ${existingReadme ? existingReadme.slice(0, 1000) : "None"}
-      - File Structure (inference): 
-      ${treeView}
+  **Source Material:**
+  - User Description (highest priority): ${description || "None provided"}
+  - Existing README (for reference only): ${existingReadme ? existingReadme.slice(0, 1000) : "None"}
+  - File Tree (use to infer architecture, features, and scripts):
+  ${treeView}
 
-      **Strict Guidelines for "Resume-Level" Quality:**
-      1.  **Professional Tone:** Confident, technical, and concise. No fluff.
-      2.  **Problem-First Approach:** Explain *why* this exists before *how* it works.
-      3.  **Visual Appeal:** Use badges, emojis (tastefully), and clear section headers.
-      4.  **Architectural Insight:** Infer the architecture from the file tree.
+  ---
 
-      **Required Structure (in Markdown):**
+  **Your Writing Principles:**
+  - Be concise and scannable — developers skim READMEs, not read them.
+  - Lead with value: explain *what* and *why* before *how*.
+  - Use active voice and present tense.
+  - Infer tech stack, scripts, and architecture intelligently from the file tree.
+  - Only include sections that are relevant and non-empty. Skip sections you cannot fill meaningfully.
+  - Use tasteful emojis in headers for visual hierarchy (not in body text).
+  - Badges must use real shield.io URLs relevant to the repo.
 
-      # ${repoName} 🚀
+  ---
 
-      ![GitHub license](https://img.shields.io/github/license/${owner}/${repoName})
-      ![GitHub stars](https://img.shields.io/github/stars/${owner}/${repoName})
-      ![GitHub issues](https://img.shields.io/github/issues/${owner}/${repoName})
+  **README Structure to Follow:**
 
-      > *A brief, high-impact tagline summarizing the project.*
+  # ${repoName}
 
-      ## 📖 Introduction
-      ## ✨ Key Features
-      ## 🛠️ Tech Stack
-      ## 📂 Project Structure
-      ## 🚀 Getting Started
+  <!-- Badges row — include only applicable ones -->
+  ![License](https://img.shields.io/github/license/${owner}/${repoName})
+  ![Stars](https://img.shields.io/github/stars/${owner}/${repoName}?style=social)
+  ![Issues](https://img.shields.io/github/issues/${owner}/${repoName})
+  ![Last Commit](https://img.shields.io/github/last-commit/${owner}/${repoName})
+  <!-- Add language/framework badge if detectable -->
 
-      Use ${summary.packageManager} for install commands.
+  > **One-line tagline.** What it does and who it's for — max 20 words.
 
-      ### Prerequisites
-      ### Installation
-      ### Running Locally
+  ---
 
-      ## 🤝 Contributing
-      ## 📄 License
+  ## 📌 Overview
+  2–4 sentences. What problem does this solve? Who is it for? What makes it notable?
+  Avoid marketing fluff. Be direct and technical.
 
-      ---
-      *Generated with ❤️ by Readme.AI*
-    `;
+  ## ✨ Features
+  - Bullet list of 4–8 concrete, specific features.
+  - Infer from file structure if not provided.
+  - Focus on user/developer value, not implementation details.
+
+  ## 🛠️ Tech Stack
+  | Category | Technology |
+  |----------|------------|
+  | Language | ... |
+  | Framework | ... |
+  | ... | ... |
+  Only include rows you can confidently fill.
+
+  ## 📁 Project Structure
+  \`\`\`
+  Paste a trimmed, annotated version of the file tree.
+  Add inline comments (# ...) to explain key directories/files.
+  Keep it under 20 lines — omit node_modules, .git, build artifacts.
+  \`\`\`
+
+  ## 🚀 Getting Started
+
+  ### Prerequisites
+  - List runtime versions, tools, or accounts required.
+  - Example: Node.js >= 18, a PostgreSQL database, an OpenAI API key.
+
+  ### Installation
+  \`\`\`bash
+  git clone https://github.com/${owner}/${repoName}.git
+  cd ${repoName}
+  ${summary.packageManager} install
+  \`\`\`
+
+  ### Configuration
+  If env variables are needed, show a .env.example block:
+  \`\`\`env
+  # Example — infer key names from file tree if possible
+  API_KEY=your_key_here
+  DATABASE_URL=your_db_url
+  \`\`\`
+  Skip this section entirely if no configuration is needed.
+
+  ### Running the Project
+  \`\`\`bash
+  # Development
+  ${summary.packageManager} run dev
+
+  # Production build
+  ${summary.packageManager} run build
+  ${summary.packageManager} start
+  \`\`\`
+  Adjust commands based on what you detect in the file tree (e.g., Makefile, scripts/, Dockerfile).
+
+  ## 🧪 Testing
+  \`\`\`bash
+  ${summary.packageManager} test
+  \`\`\`
+  Include only if test files or a test script are detected in the file tree.
+
+  ## 🤝 Contributing
+  1. Fork the repository
+  2. Create a feature branch: \`git checkout -b feat/your-feature\`
+  3. Commit with conventional commits: \`git commit -m "feat: add X"\`
+  4. Push and open a Pull Request
+
+  ## 📄 License
+  Distributed under the [LICENSE NAME](./LICENSE) license.
+
+  ---
+  *Generated by [Readme.AI](https://github.com/${owner}/${repoName})*
+
+  ---
+
+  **Final rules:**
+  - Output raw Markdown only. No explanations, no code fences wrapping the whole output.
+  - Do not invent features, dependencies, or scripts you cannot infer from the provided context.
+  - If a section cannot be meaningfully filled, omit it entirely rather than leaving placeholder text.
+  - Ensure all code blocks specify the correct language for syntax highlighting.
+`;
 
     // ------------------------------------------------
     // 5. Generate README

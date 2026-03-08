@@ -26,6 +26,7 @@ export default function Dashboard() {
       try {
         const res = await fetch("/api/repos");
         const data = await res.json();
+        console.log(data[0]);
         setRepos(data);
       } catch (err) {
         console.error("Failed to fetch repos", err);
@@ -41,7 +42,6 @@ export default function Dashboard() {
     return <p className="text-white p-6 text-center">Loading session...</p>;
   }
 
-  // Filter repositories based on search
   const filteredRepos = repos.filter((repo) =>
     repo.name.toLowerCase().includes(search.toLowerCase()),
   );

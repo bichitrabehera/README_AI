@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/libs/auth";
 import { Redis } from "@upstash/redis";
 
-const RATE_LIMIT_WINDOW = 24 * 60 * 60 * 1000; // 24 hours in ms
+const RATE_LIMIT_WINDOW = 24 * 60 * 60 * 1000;
 
 const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL as string,
@@ -32,7 +32,7 @@ export async function checkRateLimit(): Promise<NextResponse | string> {
             "You can only generate one README per day. Try again after " +
             resetAt.toLocaleString(),
         },
-        { status: 429 }
+        { status: 429 },
       );
     }
   }

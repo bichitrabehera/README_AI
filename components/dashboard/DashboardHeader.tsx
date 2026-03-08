@@ -9,23 +9,31 @@ interface Props {
 
 const DashboardHeader = ({ username }: Props) => {
   return (
-    <header className="w-full border-b border-white/10 bg-black">
-      <div className="max-w-6xl mx-auto flex items-center justify-between px-4 py-4">
-
-        <div className="flex flex-col leading-tight">
-          <Link href="/dashboard" className="text-sm font-semibold tracking-widest uppercase text-white">
+    <header className="w-full border-b border-white/10 bg-black/60 backdrop-blur-md">
+      <div className="max-w-6xl mx-auto flex items-center justify-between px-6 h-14">
+        {/* Left section */}
+        <div className="flex items-center gap-6">
+          <Link
+            href="/dashboard"
+            className="text-sm font-semibold text-white tracking-tight"
+          >
             README.AI
           </Link>
-          <span className="text-xs text-white/40">Welcome, {username}</span>
         </div>
 
-        <button
-          onClick={() => signOut({ callbackUrl: "/" })}
-          className="text-sm text-white/40 hover:text-white transition-colors duration-200"
-        >
-          Logout
-        </button>
+        {/* Right section */}
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-white/60 hidden sm:block">
+            {username}
+          </span>
 
+          <button
+            onClick={() => signOut({ callbackUrl: "/" })}
+            className="text-sm text-white/60 hover:text-white transition"
+          >
+            Logout
+          </button>
+        </div>
       </div>
     </header>
   );

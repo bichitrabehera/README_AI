@@ -9,6 +9,7 @@ interface GitHubRepo {
     avatar_url: string;
   };
   updated_at: string;
+  default_branch: string;
 }
 
 export async function GET() {
@@ -43,6 +44,7 @@ export async function GET() {
           avatar_url: repo.owner.avatar_url,
         },
         updated_at: repo.updated_at,
+        default_branch: repo.default_branch,
       })),
     );
 
