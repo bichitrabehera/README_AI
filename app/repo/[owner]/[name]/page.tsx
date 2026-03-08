@@ -1,7 +1,7 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import RepoDetails from "@/components/dashboard/RepoDetails";
@@ -17,10 +17,29 @@ export default function RepoPage() {
 
   const [repo, setRepo] = useState<GitHubRepo | null>();
   const [loading, setLoading] = useState(true);
-  const [readme, setReadme] = useState("");
+  // const [readme, setReadme] = useState("");
   const [generating, setGenerating] = useState(false);
   const [description, setDescription] = useState("");
   // const [commitMessage, setCommitMessage] = useState("Updated Readme File");
+
+  const cacheKey = `readme_cache_${owner}_${name}`;
+
+  const [readme, setReadme] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+
+    const cached = localStorage.getItem(cacheKey);
+    return cached ?? null;
+  });
+
+  const updateReadme = useCallback(
+    (value: string) => {
+      setReadme(value);
+      if (value) {
+        localStorage.setItem(cacheKey, value);
+      }
+    },
+    [cacheKey],
+  );
 
   useEffect(() => {
     if (!session?.accessToken || !owner || !name) return;
@@ -58,8 +77,8 @@ export default function RepoPage() {
     }
 
     const data = await res.json();
-    setReadme(data.readme);
-    
+    updateReadme(data.readme);
+
     setGenerating(false);
   };
 
@@ -85,7 +104,7 @@ export default function RepoPage() {
       <DashboardHeader username={session?.user?.name} />
 
       <div className="mx-auto max-w-6xl px-4 py-8">
-        <div className="grid grid-cols-1 gap-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
           <section
             className="
             bg-black/40
@@ -137,10 +156,6 @@ export default function RepoPage() {
         
           "
           >
-            <h2 className="text-sm uppercase tracking-wider text-white/50 mb-4">
-              Preview & Commit
-            </h2>
-
             {readme ? (
               <ReadmePreview content={readme} />
             ) : (

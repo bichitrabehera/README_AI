@@ -16,7 +16,7 @@ const StyledWrapper = styled.div`
   width: 100%;
   height: 100%;
 
-  background-color: #f8fafc;
+  background-color: #000000;
 
   .grid-background {
     position: absolute;
@@ -24,10 +24,10 @@ const StyledWrapper = styled.div`
     z-index: 0;
 
     background-image:
-      linear-gradient(to right, #e2e8f0 1px, transparent 1px),
-      linear-gradient(to bottom, #e2e8f0 1px, transparent 1px);
+      linear-gradient(to right, #111 1px, transparent 1px),
+      linear-gradient(to bottom, #111 1px, transparent 1px);
 
-    background-size: 24px 24px;
+    background-size: 40px 40px;
 
     
   }

@@ -23,7 +23,6 @@ const clamp = (value: number) => Math.max(0, Math.min(1, value));
 /* ----------------------------------
    Dependency extraction
 ----------------------------------- */
-
 function extractDependencies(dependencyFilePath: string): string[] {
   try {
     const content = fs.readFileSync(dependencyFilePath, "utf-8");

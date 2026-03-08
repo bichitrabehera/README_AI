@@ -5,18 +5,22 @@ import { FaGithub } from "react-icons/fa";
 
 const Header = () => {
   return (
-    <header className="w-full border-b border-black/10 bg-[#f8fafc] backdrop-blur-md">
+    <header className="w-full sticky border-b border-zinc-800 bg-black">
       <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-        <h1 className="text-black font-[GT] font-semibold text-lg tracking-wide">
-          <Link href="/">README.AI</Link>
-        </h1>
+        <Link
+          href="/"
+          className="text-lg font-semibold tracking-widest uppercase text-white"
+        >
+          README.AI
+        </Link>
 
-        <button className="bg-white border border-black/20 text-black py-1 px-3 hover:bg-black hover:text-white transition-all">
-          <div className="flex justify-center items-center gap-2">
-            <Link href="/login">Login </Link>
-            <FaGithub />
-          </div>
-        </button>
+        <Link
+          href="/login"
+          className="flex items-center gap-2 text-sm text-white transition-colors duration-200"
+        >
+          <FaGithub className="text-base" />
+          <span>Login with GitHub</span>
+        </Link>
       </div>
     </header>
   );

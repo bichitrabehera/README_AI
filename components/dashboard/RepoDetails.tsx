@@ -8,8 +8,7 @@ interface Props {
 
 const RepoDetails = ({ repo }: Props) => {
   return (
-    <div className="rounded-xl border border-white/10 bg-black/40 backdrop-blur-xl p-5">
-      
+    <div className="rounded border border-white/10 bg-black/40 backdrop-blur-xl p-5">
       <div className="flex items-start gap-4">
         <Image
           src={repo.owner.avatar_url}
@@ -20,14 +19,10 @@ const RepoDetails = ({ repo }: Props) => {
         />
 
         <div className="flex-1">
-          <h2 className="text-lg font-semibold break-all">
-            {repo.full_name}
-          </h2>
+          <h2 className="text-lg font-semibold break-all">{repo.full_name}</h2>
 
           {repo.description && (
-            <p className="text-sm text-white/60 mt-1">
-              {repo.description}
-            </p>
+            <p className="text-sm text-white/60 mt-1">{repo.description}</p>
           )}
 
           <a

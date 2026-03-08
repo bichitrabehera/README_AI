@@ -1,16 +1,103 @@
 import OpenAI from "openai";
 import { NextResponse } from "next/server";
-import { analyzeRepository } from "@/libs";
+import { Octokit } from "@octokit/rest";
 
 const openai = new OpenAI({
-  apiKey: "local",
-  baseURL: "http://localhost:12434/v1",
+  // baseURL: "http://localhost:12434/v1",
+});
+
+const octokit = new Octokit({
+  auth: process.env.GITHUB_TOKEN,
 });
 
 type TreeNode = { [key: string]: TreeNode };
-interface GitTreeItem {
-  type: "blob" | "tree";
-  path: string;
+
+interface RepoSummary {
+  language: string;
+  framework: string;
+  projectType: string;
+  packageManager: string;
+}
+
+function analyzeRepository(filePaths: string[]): RepoSummary {
+  const files = filePaths.map((f) => f.toLowerCase());
+
+  // --- Language ---
+  const language = files.some((f) => f.endsWith(".ts") || f.endsWith(".tsx"))
+    ? "TypeScript"
+    : files.some((f) => f.endsWith(".js") || f.endsWith(".jsx"))
+      ? "JavaScript"
+      : files.some((f) => f.endsWith(".py"))
+        ? "Python"
+        : files.some((f) => f.endsWith(".go"))
+          ? "Go"
+          : files.some((f) => f.endsWith(".rs"))
+            ? "Rust"
+            : files.some((f) => f.endsWith(".java"))
+              ? "Java"
+              : "Unknown";
+
+  // --- Framework ---
+  const framework = files.some((f) => f.includes("next.config"))
+    ? "Next.js"
+    : files.some((f) => f.includes("vite.config"))
+      ? "Vite + React"
+      : files.some((f) => f.includes("nuxt.config"))
+        ? "Nuxt.js"
+        : files.some((f) => f.includes("svelte.config"))
+          ? "SvelteKit"
+          : files.some((f) => f.includes("angular.json"))
+            ? "Angular"
+            : files.some((f) => f.includes("manage.py"))
+              ? "Django"
+              : files.some(
+                    (f) =>
+                      f.includes("requirements.txt") || f.includes("app.py"),
+                  )
+                ? "Flask / FastAPI"
+                : files.some((f) => f.endsWith("go.mod"))
+                  ? "Go Modules"
+                  : files.some((f) => f.includes("cargo.toml"))
+                    ? "Cargo (Rust)"
+                    : files.some((f) => f.includes("pom.xml"))
+                      ? "Maven (Java)"
+                      : files.some((f) => f.includes("build.gradle"))
+                        ? "Gradle (Java)"
+                        : "Unknown";
+
+  // --- Project Type ---
+  const projectType = files.some(
+    (f) => f.includes("app/") || f.includes("pages/"),
+  )
+    ? "Web Application"
+    : files.some(
+          (f) =>
+            f.includes("api/") ||
+            f.includes("routes/") ||
+            f.includes("controllers/"),
+        )
+      ? "REST API / Backend"
+      : files.some((f) => f.includes("cli") || f.includes("cmd/"))
+        ? "CLI Tool"
+        : files.some(
+              (f) =>
+                f.includes("lib/") ||
+                f.includes("index.ts") ||
+                f.includes("index.js"),
+            )
+          ? "Library / Package"
+          : "General Project";
+
+  // --- Package Manager ---
+  const packageManager = files.includes("bun.lockb")
+    ? "bun"
+    : files.includes("pnpm-lock.yaml")
+      ? "pnpm"
+      : files.includes("yarn.lock")
+        ? "yarn"
+        : "npm";
+
+  return { language, framework, projectType, packageManager };
 }
 
 function generateFileTree(paths: string[]): string {
@@ -20,9 +107,7 @@ function generateFileTree(paths: string[]): string {
     const parts = path.split("/");
     let current: TreeNode = tree;
     parts.forEach((part) => {
-      if (!current[part]) {
-        current[part] = {};
-      }
+      if (!current[part]) current[part] = {};
       current = current[part];
     });
   });
@@ -30,16 +115,13 @@ function generateFileTree(paths: string[]): string {
   function buildString(node: TreeNode, prefix = ""): string {
     const keys = Object.keys(node).sort();
     let result = "";
-
     keys.forEach((key, index) => {
       const isLast = index === keys.length - 1;
       const connector = isLast ? "└── " : "├── ";
       const childPrefix = isLast ? "    " : "│   ";
-
       result += `${prefix}${connector}${key}\n`;
       result += buildString(node[key], prefix + childPrefix);
     });
-
     return result;
   }
 
@@ -57,66 +139,58 @@ export async function POST(req: Request) {
       );
     }
 
-    const owner = repo.owner.login;
-    const repoName = repo.name;
+    const owner: string = repo.owner.login;
+    const repoName: string = repo.name;
 
     // ------------------------------------------------
     // 0. Fetch existing README if present
     // ------------------------------------------------
     let existingReadme: string | null = null;
 
-    const readmeRes = await fetch(
-      `https://api.github.com/repos/${owner}/${repoName}/readme`,
-      {
-        headers: {
-          Accept: "application/vnd.github+json",
-        },
-      },
-    );
+    try {
+      const { data: readmeData } = await octokit.repos.getReadme({
+        owner,
+        repo: repoName,
+      });
 
-    if (readmeRes.ok) {
-      const readmeData = await readmeRes.json();
       if (readmeData?.content) {
         existingReadme = Buffer.from(readmeData.content, "base64").toString(
           "utf-8",
         );
       }
+    } catch {
+      // No README exists, continue
     }
 
     // ------------------------------------------------
     // 1. Fetch repository tree
     // ------------------------------------------------
-    const treeRes = await fetch(
-      `https://api.github.com/repos/${owner}/${repoName}/git/trees/main?recursive=1`,
-    );
+    let filePaths: string[] = [];
 
-    if (!treeRes.ok) {
+    try {
+      const { data: repoData } = await octokit.repos.get({
+        owner,
+        repo: repoName,
+      });
+
+      const defaultBranch = repoData.default_branch ?? "main";
+
+      const { data: treeData } = await octokit.git.getTree({
+        owner,
+        repo: repoName,
+        tree_sha: defaultBranch,
+        recursive: "1",
+      });
+
+      filePaths = (treeData.tree ?? [])
+        .filter((item) => item.type === "blob" && typeof item.path === "string")
+        .map((item) => item.path as string);
+    } catch {
       return NextResponse.json(
         { error: "Failed to fetch repository tree" },
         { status: 500 },
       );
     }
-
-    const treeData = await treeRes.json();
-
-    const rawTree: unknown = (treeData as { tree?: unknown }).tree;
-
-    function isGitTreeItem(x: unknown): x is GitTreeItem {
-      if (typeof x !== "object" || x === null) return false;
-      const obj = x as { type?: unknown; path?: unknown };
-      const typeValid =
-        obj.type === "blob" || obj.type === "tree";
-      const pathValid = typeof obj.path === "string";
-      return typeValid && pathValid;
-    }
-
-    const treeItems: GitTreeItem[] = Array.isArray(rawTree)
-      ? rawTree.filter(isGitTreeItem)
-      : [];
-
-    const filePaths: string[] = treeItems
-      .filter((item) => item.type === "blob")
-      .map((item) => item.path);
 
     if (filePaths.length === 0) {
       return NextResponse.json(
@@ -133,7 +207,6 @@ export async function POST(req: Request) {
     // ------------------------------------------------
     // 3. Folder structure (Tree view)
     // ------------------------------------------------
-    // Take up to 100 files to build a representative tree
     const treeView = generateFileTree(filePaths.slice(0, 100));
 
     // ------------------------------------------------
@@ -152,6 +225,7 @@ export async function POST(req: Request) {
       - Detected Language: ${summary.language}
       - Detected Framework: ${summary.framework}
       - Project Type: ${summary.projectType}
+      - Package Manager: ${summary.packageManager}
       
       **Source Material:**
       - User Provided Description (High Priority): ${description || "None provided"}
@@ -161,9 +235,9 @@ export async function POST(req: Request) {
 
       **Strict Guidelines for "Resume-Level" Quality:**
       1.  **Professional Tone:** Confident, technical, and concise. No fluff.
-      2.  **Problem-First Approach:** Explain *why* this exists before *how* it works. If the user provided a description, use it as the core of the introduction.
+      2.  **Problem-First Approach:** Explain *why* this exists before *how* it works.
       3.  **Visual Appeal:** Use badges, emojis (tastefully), and clear section headers.
-      4.  **Architectural Insight:** Infer the architecture (e.g., "Next.js App Router," "REST API," "Microservices") from the file tree.
+      4.  **Architectural Insight:** Infer the architecture from the file tree.
 
       **Required Structure (in Markdown):**
 
@@ -176,51 +250,19 @@ export async function POST(req: Request) {
       > *A brief, high-impact tagline summarizing the project.*
 
       ## 📖 Introduction
-      A professional executive summary. What problem does this solve? Who is it for?
-      (Infer this from the code structure and file names).
-
       ## ✨ Key Features
-      - **Feature 1**: Description...
-      - **Feature 2**: Description...
-      - **Feature 3**: Description...
-      (Identify these from folder names like 'auth', 'api', 'components', etc.)
-
       ## 🛠️ Tech Stack
-      - **Languages**: ${summary.language}
-      - **Frameworks**: ${summary.framework}
-      - **Tools**: (Infer tools like Docker, Tailwind, Prisma from file names)
-
       ## 📂 Project Structure
-      \`\`\`bash
-      ${treeView.split("\n").slice(0, 15).join("\n")}
-      ...
-      \`\`\`
-
       ## 🚀 Getting Started
 
-      **Important:** Generate the "Getting Started" section based *strictly* on the detected language and framework (${summary.language} / ${summary.framework}).
-      
-      - If Node.js/JS/TS: Show npm install and npm run dev (or yarn/pnpm/bun if lockfiles are present).
-      - If Python: Show pip install -r requirements.txt or poetry install.
-      - If Go: Show go mod download and go run .
-      - If Rust: Show cargo build and cargo run.
-      - If Java/Maven/Gradle: Show ./mvnw install or ./gradlew build. 
-      - If unknown, provide generic instructions.
+      Use ${summary.packageManager} for install commands.
 
       ### Prerequisites
-      List prerequisites compatible with the tech stack (e.g., Node.js version, Python version, Docker, etc.).
-
       ### Installation
-      Provide the exact commands to clone and install dependencies.
-
       ### Running Locally
-      Provide the command to start the development server or run the app.
 
       ## 🤝 Contributing
-      Contributions are welcome! Please check out the [issues](https://github.com/${owner}/${repoName}/issues) page.
-
       ## 📄 License
-      Distributed under the MIT License. See \`LICENSE\` for more information.
 
       ---
       *Generated with ❤️ by Readme.AI*
@@ -230,8 +272,8 @@ export async function POST(req: Request) {
     // 5. Generate README
     // ------------------------------------------------
     const completion = await openai.chat.completions.create({
-      model: "qwen3-vl:2B-UD-Q4_K_XL",
-      temperature: 0.3, // Lower temperature for more consistent formatting
+      model: "gpt-4.1-nano",
+      temperature: 0.3,
       messages: [{ role: "user", content: prompt }],
     });
 

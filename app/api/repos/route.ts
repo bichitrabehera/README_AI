@@ -6,7 +6,9 @@ interface GitHubRepo {
   name: string;
   owner: {
     login: string;
+    avatar_url: string;
   };
+  updated_at: string;
 }
 
 export async function GET() {
@@ -38,7 +40,9 @@ export async function GET() {
         name: repo.name,
         owner: {
           login: repo.owner.login,
+          avatar_url: repo.owner.avatar_url,
         },
+        updated_at: repo.updated_at,
       })),
     );
 
